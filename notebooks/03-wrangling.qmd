@@ -25,16 +25,18 @@ table_02
 ```
 
 **1. How many rows? What does one row represent?**
-
+132*6
 *Your answer:*
 
 **2. After `table_02 |> filter(time_point == "baseline")`, how many rows? What does each row represent now?**
+table_02 |> filter(time_point == "baseline")
 
-*Your answer:*
+
+*Your answer:44*6, now it has filtered timepoint for baseline alone
 
 **3. After `table_02 |> count(arm)`, how many rows? What does each row represent now?**
 
-*Your answer:*
+*Your answer:2*2, each row now represents placebo and treatment
 
 ## Part 2 — Build the pipeline
 
@@ -42,32 +44,39 @@ Each step adds one verb on top of the previous pipeline. Run after each step.
 
 ```{r}
 # step 1: pipe table_02 into head()
+table_02 |> head()
 ```
 
 ```{r}
 # step 2: filter to the baseline time point
+table_02 |> filter(time_point == "baseline")
 ```
 
 ```{r}
 # step 3: add select() for pid, arm, ph, nugent_score, crp_blood
+table_02 |> select(pid, arm, ph, nugent_score, crp_blood)
 ```
 
 ```{r}
 # step 4: add mutate() for high_ph = if_else(ph >= 4.5, "yes", "no")
+table_02 |> mutate(high_ph == if_else(ph >= 4.5, "yes", "no")
 ```
 
 ```{r}
 # step 5: add arrange(desc(ph))
+table_02 |> arrange(desc(ph))
 ```
 
 ```{r}
 # step 6: assign the final pipeline to early_visit, then print it
-early_visit <- NULL  # replace NULL with the pipeline
-early_visit
+early_visit <- table_02  # replace NULL with the pipeline
+print(early_visit)
+
 ```
 
 ```{r}
 # step 7: separately, table_02 |> count(arm)
+table_02 |> count(arm)
 ```
 
 ## Part 3 — Reach (optional)
@@ -82,4 +91,11 @@ Then run `count(arm, nugent_category)`.
 
 ```{r}
 # reach: mutate(nugent_category = case_when(...)) then count(arm, nugent_category)
+table_02 |>
+  mutate(nugent_category = case_when(
+    nugent_score <= 3  ~ "normal",
+    nugent_score <= 6  ~ "intermediate",
+    TRUE               ~ "BV"
+  )) |>
+  count(arm, nugent_category)
 ```

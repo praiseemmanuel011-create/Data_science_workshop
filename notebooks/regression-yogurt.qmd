@@ -1,0 +1,86 @@
+---
+title: "Regression Model — Yogurt Study"
+format: html
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+> Fitting a mixed model to test the effect of yogurt on **L. iners** bacterial levels, adjusting for the imbalanced covariate `birth_control`, and accounting for repeated samples (baseline + after_antibiotic) from the same participant.
+
+## Why this model?
+
+| Concern | How it's handled |
+|---|---|
+| **Repeated measures** (2 time points per person) | Random intercept `(1 \| pid)` |
+| **Imbalanced covariate** (birth_control, p=0.017 in Table 1) | Added as a fixed effect |
+| **Skewed outcome** (qpcr_iners ranges 0–3.8M) | Log-transformed: `log(qpcr_iners + 1)` |
+
+## Setup
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(gtsummary)
+library(lme4)
+library(broom.mixed)
+```
+
+## Read & join data
+
+```{r data}
+samples <- read_csv(
+  here("data/group_a_yogurt/00_sample_ids_yogurt.csv"),
+  col_types = cols(pid = col_character())
+)
+meta <- read_csv(
+  here("data/group_a_yogurt/01_participant_metadata_yogurt.csv"),
+  col_types = cols(pid = col_character())
+)
+qpcr <- read_csv(
+  here("data/group_a_yogurt/02_qpcr_results_yogurt.csv"),
+  col_types = cols(sample_id = col_character())
+)
+
+df <- samples |>
+  left_join(meta, by = c("pid", "arm")) |>
+  inner_join(qpcr, by = "sample_id") |>
+  mutate(
+    log_iners = log(qpcr_iners + 1),       # log-transform for normality
+    time_point = fct_relevel(time_point, "baseline")  # baseline as reference
+  )
+```
+
+## Fit the model
+
+We want to know: **Does the change in L. iners from baseline to after_antibiotic differ between the yogurt and unchanged-diet arms?**
+
+```{r model}
+m <- lmer(
+  log_iners ~ arm * time_point + birth_control + (1 | pid),
+  data = df
+)
+```
+
+## Coefficient table with `tbl_regression()`
+
+```{r table}
+m |>
+  tbl_regression(
+    intercept = TRUE,
+    label = list(
+      arm           ~ "Study arm",
+      time_point    ~ "Time point",
+      birth_control ~ "Birth control",
+      `arm:time_point` ~ "Arm × Time interaction"
+    )
+  ) |>
+  bold_labels()
+```
+
+## Model summary (quick check)
+
+```{r summary}
+summary(m)
+```

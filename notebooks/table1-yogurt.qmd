@@ -1,0 +1,98 @@
+---
+title: "Table 1 — Yogurt Study Participant Demographics"
+format: html
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+> Creating a **Table 1** — a summary table of participant characteristics, split by study arm (yogurt vs unchanged diet), with p-values from `gtsummary`.
+
+## Setup
+
+Load the packages and read in the data:
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(gtsummary)
+
+df <- read_csv(
+  here("data/group_a_yogurt/01_participant_metadata_yogurt.csv"),
+  col_types = cols(pid = col_character())
+)
+```
+
+## Quick peek at the data
+
+```{r}
+df
+```
+
+## Step 1 — Basic `tbl_summary` by arm
+
+Remove the participant ID column (`pid`) since it's just an identifier, then summarise everything else split by the `arm` column (yogurt vs unchanged_diet).
+
+```{r step1}
+df |>
+  select(-pid) |>
+  tbl_summary(by = arm)
+```
+
+**What it shows:** For each variable, it shows the distribution within each arm — counts (n, %) for categorical variables (birth_control, education, sex) and median (Q1, Q3) for continuous variables (days_since_last_sex, age).
+
+---
+
+## Step 2 — Add p-values with `add_p()`
+
+This adds a p-value column testing whether each variable differs between the two arms. `gtsummary` picks the right test automatically (e.g. Wilcoxon rank-sum for continuous, chi-square for categorical).
+
+```{r step2}
+df |>
+  select(-pid) |>
+  tbl_summary(by = arm) |>
+  add_p()
+```
+
+---
+
+## Step 3 — Override `age` to show mean (SD) and use a t-test
+
+By default `tbl_summary` shows median (Q1, Q3) for continuous variables. Let's change `age` to mean (SD) and use a t-test instead of the Wilcoxon test.
+
+```{r step3}
+df |>
+  select(-pid) |>
+  tbl_summary(
+    by = arm,
+    statistic = list(age ~ "{mean} ({sd})")
+  ) |>
+  add_p(test = list(age ~ "t.test"))
+```
+
+---
+
+## Step 4 — Polish: add overall column, bold labels, nicer header
+
+Add the finishing touches: an overall column that shows the whole-sample distribution, bold variable labels, and a cleaner header.
+
+```{r step4}
+df |>
+  select(-pid) |>
+  tbl_summary(
+    by = arm,
+    statistic = list(age ~ "{mean} ({sd})")
+  ) |>
+  add_p(test = list(age ~ "t.test")) |>
+  add_overall() |>
+  bold_labels() |>
+  modify_header(label ~ "**Characteristic**")
+```
+
+---
+
+## Quick interpretation
+
+- **Which variables look balanced** between the yogurt and unchanged-diet groups? (Look for large p-values.)
+- **Which variables might be imbalanced?** (Look for small p-values.) Could any of these confound the yogurt effect?

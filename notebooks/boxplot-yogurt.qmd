@@ -1,0 +1,90 @@
+---
+title: "Boxplots — Yogurt qPCR Outcomes"
+format: html
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+> Using `ggboxplot()` + `stat_compare_means()` to compare qPCR bacterial levels between study arms, then `facet_wrap()` to screen all 3 outcomes at once.
+
+## Setup
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(ggpubr)
+
+# ── Read sample IDs (links sample_id ↔ pid ↔ arm) ──
+samples <- read_csv(
+  here("data/group_a_yogurt/00_sample_ids_yogurt.csv"),
+  col_types = cols(pid = col_character())
+)
+
+# ── Read qPCR results ──
+qpcr <- read_csv(
+  here("data/group_a_yogurt/02_qpcr_results_yogurt.csv"),
+  col_types = cols(sample_id = col_character())
+)
+
+# ── Join to get arm ──
+df <- samples |>
+  select(sample_id, arm) |>
+  inner_join(qpcr, by = "sample_id")
+
+glimpse(df)
+```
+
+## 1 — Single outcome: total bacteria
+
+```{r single}
+ggboxplot(
+  df,
+  x = "arm",
+  y = "qpcr_bacteria",
+  color = "arm",
+  palette = "jco",
+  add = "jitter"
+) +
+  stat_compare_means() +                        # default: Wilcoxon test
+  labs(
+    title = "Total bacteria by study arm",
+    x = "Arm",
+    y = "Total bacteria (copies/mL)"
+  )
+```
+
+## 2 — Screen all 3 outcomes with `facet_wrap()`
+
+Pivot the data longer so each row is one sample × one bacterial target, then facet.
+
+```{r facet}
+df |>
+  pivot_longer(
+    cols = c(qpcr_bacteria, qpcr_crispatus, qpcr_iners),
+    names_to = "bacteria",
+    values_to = "copies"
+  ) |>
+  mutate(
+    bacteria = recode(bacteria,
+      qpcr_bacteria  = "Total bacteria",
+      qpcr_crispatus = "L. crispatus",
+      qpcr_iners     = "L. iners"
+    )
+  ) |>
+  ggboxplot(
+    x = "arm",
+    y = "copies",
+    color = "arm",
+    palette = "jco",
+    add = "jitter"
+  ) +
+  stat_compare_means() +
+  facet_wrap(~ bacteria, scales = "free_y") +
+  labs(
+    title = "qPCR outcomes by study arm",
+    x = "Arm",
+    y = "Copies/mL"
+  )
+```

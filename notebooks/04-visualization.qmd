@@ -30,9 +30,9 @@ ggplot(table_02, aes(ph)) +
 
 **Plot 1 (above). Answer in plain words:**
 
-1. What is the mark?
-2. What mark property comes from what column?
-3. How many rows of data made each mark?
+1. What is the mark? The coloured bars
+2. What mark property comes from what column? Count
+3. How many rows of data made each mark? 13
 
 ```{r}
 #| echo: false
@@ -42,7 +42,9 @@ ggplot(table_02, aes(arm, ph)) +
   geom_boxplot()
 ```
 
-**Plot 2 (above). Answer the same three questions.**
+**Plot 2 (above). Answer the same three questions.**The box
+ph
+1
 
 ```{r}
 #| echo: false
@@ -52,7 +54,9 @@ ggplot(table_02, aes(arm, ph)) +
   geom_quasirandom()
 ```
 
-**Plot 3 (above). Answer the same three questions.**
+**Plot 3 (above). Answer the same three questions.**The points
+ph
+placebo 69, Treatment 63
 
 **Sketch.** Draw on paper or describe in words a plot that would answer "does pH differ between arms?" using a **layered** approach — raw observations underneath a summary mark.
 
@@ -62,30 +66,42 @@ ggplot(table_02, aes(arm, ph)) +
 
 ```{r}
 # step 1: ggplot(table_02, aes(ph)) + geom_histogram(), then add + facet_wrap(~ arm)
+library(tidyverse)
+ggplot(table_02, aes(ph))+
+geom_histogram()+
+facet_wrap(~arm)
 ```
 
 ```{r}
 # step 2: ggplot(table_02, aes(arm, ph)) + geom_boxplot()
+ggplot(table_02, aes(arm, ph))+
+geom_boxplot()
 ```
 
 ```{r}
 # step 3: swap geom_boxplot() for geom_quasirandom()
+library(ggbeeswarm)
+library(ggplot2)
+ggplot(table_02, aes(arm, ph))+
+  geom_quasirandom()
 ```
 
 ```{r}
 # step 4: swap for geom_violin()
+ggplot(table_02, aes(arm, ph))+
+  geom_violin()
 ```
 
 ```{r}
 # step 5a: compute ph_summary <- table_02 |> group_by(arm) |>
 #                                summarise(mean_ph = mean(ph), sd_ph = sd(ph))
-ph_summary <- NULL  # replace NULL with the pipeline
-ph_summary
+ph_summary <- table_02 |> group_by(arm) |> summarise(mean_ph = mean(ph), sd_ph = sd(ph))  # replace NULL with the pipeline
+print(ph_summary)
 ```
 
 ```{r}
-# step 5b: ggplot(ph_summary, aes(arm, mean_ph)) +
-#            geom_pointrange(aes(ymin = mean_ph - sd_ph, ymax = mean_ph + sd_ph))
+ step 5b: ggplot(ph_summary, aes(arm, mean_ph)) +
+            geom_pointrange(aes(ymin = mean_ph - sd_ph, ymax = mean_ph + sd_ph))
 ```
 
 ```{r}

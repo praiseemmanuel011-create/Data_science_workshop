@@ -1,0 +1,292 @@
+---
+title: "Yogurt Study — Deep Dive"
+format: html
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(patchwork)
+```
+
+## 1. Load all four tables
+
+Let's read every piece of the yogurt dataset and see what we're working with.
+
+```{r load-data}
+sample_ids  <- read_csv(here("data/group_a_yogurt/00_sample_ids_yogurt.csv"))
+metadata    <- read_csv(here("data/group_a_yogurt/01_participant_metadata_yogurt.csv"))
+qpcr        <- read_csv(here("data/group_a_yogurt/02_qpcr_results_yogurt.csv"))
+luminex     <- read_csv(here("data/group_a_yogurt/03_luminex_results_yogurt.csv"))
+
+# Quick peek at each one
+glimpse(sample_ids)
+```
+
+```{r glimpse-all}
+glimpse(metadata)
+glimpse(qpcr)
+glimpse(luminex)
+```
+
+### What one row represents in each table
+
+| Table | One row = |
+|-------|-----------|
+| `sample_ids` | One biological sample (a visit by one person) |
+| `metadata` | One participant (person in the study) |
+| `qpcr` | One sample's bacteria counts |
+| `luminex` | One sample × one cytokine measurement (10 rows per sample) |
+
+### How they link together
+
+```
+metadata ──pid──► sample_ids ──sample_id──► qpcr
+                                          ──sample_id──► luminex
+```
+
+---
+
+## 2. Join everything into one analysis table
+
+We'll join metadata to samples, then attach qPCR results.  
+(Luminex is in *long format* — one row per cytokine — so we'll come back to it separately.)
+
+```{r join-data}
+# Join samples → metadata (via pid), then → qpcr (via sample_id)
+# left_join keeps all samples even if metadata is missing
+main_df <- sample_ids |>
+  left_join(metadata, by = "pid") |>
+  left_join(qpcr, by = "sample_id")
+
+glimpse(main_df)
+```
+
+---
+
+## 3. Go deep on the numbers
+
+### 3a. Age — distribution, skew, suspicious values
+
+```{r age-deep}
+ages <- main_df |> distinct(pid, arm, age)   # one row per person
+
+summary(ages$age)
+
+# Histogram — quick look
+ggplot(ages, aes(x = age)) +
+  geom_histogram(binwidth = 2, fill = "steelblue", color = "white") +
+  labs(title = "Age distribution (all participants)",
+       x = "Age (years)", y = "Count")
+```
+
+**Questions to ask yourself:**
+
+- Is the distribution symmetric or skewed? (Skewed = a long tail on one side)
+- What's the youngest and oldest participant?
+- Do the yogurt and control groups look similar in age?
+
+```{r age-by-arm}
+ggplot(, aes(x = arm, y = age, fill = arm)) +
+  geom_boxplot() +
+  labs(title = "Age by treatment arm", x = "Arm", y = "Age (years)")
+```
+
+### 3b. Days since last sex — watch for outliers
+
+```{r sex-deep}
+days <- main_df |> distinct(pid, arm, days_since_last_sex)
+
+summary(days$days_since_last_sex)
+
+ggplot(days, aes(x = days_since_last_sex)) +
+  geom_histogram(binwidth = 2, fill = "tomato", color = "white") +
+  labs(title = "Days since last sex",
+       x = "Days", y = "Count")
+```
+
+**⚠️ Suspicious values:** Look at the max. Is 48 days plausible?  
+Check `pid_50` in the metadata — is there anything unusual about that participant?
+
+### 3c. Birth control — categorical counts
+
+```{r bc-table}
+main_df |>
+  distinct(pid, arm, birth_control) |>
+  count(arm, birth_control) |>
+  pivot_wider(names_from = arm, values_from = n, values_fill = 0)
+```
+
+### 3d. Education — categorical counts
+
+```{r edu-table}
+main_df |>
+  distinct(pid, arm, education) |>
+  count(arm, education) |>
+  pivot_wider(names_from = arm, values_from = n, values_fill = 0)
+```
+
+### 3e. qPCR bacteria counts — hugely skewed
+
+```{r qpcr-deep}
+summary(select(qpcr, qpcr_bacteria, qpcr_crispatus, qpcr_iners))
+```
+
+Those ranges are enormous — from single digits to tens of *millions*.  
+That's **heavy right skew** (most samples have low values, a few have huge values).
+
+```{r qpcr-hist}
+# Total bacteria — raw scale
+p1 <- ggplot(qpcr, aes(x = qpcr_bacteria)) +
+  geom_histogram(bins = 30, fill = "darkgreen", color = "white") +
+  labs(title = "Total bacteria (raw scale)")
+
+# Same data on log10 scale — much easier to see
+p2 <- ggplot(qpcr, aes(x = qpcr_bacteria)) +
+  geom_histogram(bins = 30, fill = "darkgreen", color = "white") +
+  scale_x_log10() +
+  labs(title = "Total bacteria (log10 scale)")
+
+p1 / p2
+```
+
+**Key insight:** Many biological measurements are log-normally distributed.  
+The raw histogram is useless — everything piles up on the left.  
+Log transform reveals the real shape.
+
+```{r qpcr-crispatus}
+# L. crispatus — note how many samples have 0
+summary(qpcr$qpcr_crispatus)
+sum(qpcr$qpcr_crispatus == 0)
+
+ggplot(qpcr, aes(x = qpcr_crispatus + 0.1)) +
+  geom_histogram(bins = 30, fill = "purple", color = "white") +
+  scale_x_log10() +
+  labs(title = "L. crispatus (log10, +0.1 to handle zeros)",
+       x = "qpcr_crispatus + 0.1 (log scale)")
+```
+
+**⚠️ Suspicious:** Most samples have *zero* `qpcr_crispatus`. A few have very large numbers.  
+This kind of zero-inflated distribution is common in microbiome data.
+
+### 3f. Cytokines — data quality: "out of range" values
+
+```{r luminex-glance}
+luminex |>
+  count(cytokine, limits) |>
+  arrange(cytokine, limits)
+```
+
+**⚠️ Many cytokine values are "out of range"** — that means the lab instrument
+couldn't measure them accurately because they were below (or above) its
+detection limit. These aren't *missing*, but they're not very precise.
+
+```{r luminex-conc}
+ggplot(luminex, aes(x = conc)) +
+  geom_histogram(bins = 40, fill = "orange", color = "white") +
+  scale_x_log10() +
+  facet_wrap(vars(cytokine), scales = "free_y") +
+  labs(title = "Cytokine concentrations (log scale, all samples)")
+```
+
+---
+
+## 4. Missing data check
+
+```{r missing}
+# How many NAs in each column of the main joined table?
+main_df |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  pivot_longer(everything(), names_to = "column", values_to = "n_missing") |>
+  filter(n_missing > 0)
+
+# In the metadata specifically
+metadata |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  pivot_longer(everything(), names_to = "column", values_to = "n_missing") |>
+  filter(n_missing > 0)
+```
+
+**Think about this:** If there's no missing data, that's a bit suspicious in
+real-world biomedical data. Why might that be? (Maybe the data was already
+cleaned, or maybe missing participants were simply excluded before it reached us.)
+
+---
+
+## 5. Iterate on one plot three times: age by arm
+
+The goal here is to pick one question — *"Does age look similar between the
+yogurt and unchanged diet groups?"* — and try three different ways to visualize
+it. You learn more by re-making one plot than by making three different plots.
+
+### Try 1: Side-by-side histograms
+
+```{r plot-v1}
+ggplot(ages, aes(x = age, fill = arm)) +
+  geom_histogram(binwidth = 3, color = "white", alpha = 0.6) +
+  labs(title = "Try 1: Overlaid histograms (binwidth = 3)",
+       x = "Age", y = "Count", fill = "Arm")
+```
+
+**What do you notice?** Is there good overlap? Can you tell both groups apart?
+
+---
+
+### Try 2: Faceted histograms + density curve
+
+The overlaid histograms from Try 1 are hard to read because they overlap.
+Let's split them into separate panels and add a smooth density curve.
+
+```{r plot-v2}
+ggplot(ages, aes(x = age, fill = arm)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 binwidth = 2, color = "white", alpha = 0.7) +
+  geom_density(alpha = 0.3) +
+  facet_wrap(vars(arm), ncol = 1) +
+  labs(title = "Try 2: Faceted histograms + density curves",
+       x = "Age", y = "Density", fill = "Arm")
+```
+
+**What changed?** The `y = after_stat(density)` makes the y-axis a proportion
+instead of raw counts — that way the two groups (which have different numbers
+of people) are comparable. The density curve smooths out the bumps.
+
+---
+
+### Try 3: Boxplot + jittered points
+
+```{r plot-v3}
+ggplot(ages, aes(x = arm, y = age, fill = arm, color = arm)) +
+  geom_boxplot(alpha = 0.4, outlier.color = NA) +
+  geom_jitter(width = 0.15, size = 2, alpha = 0.7) +
+  labs(title = "Try 3: Boxplot + individual points",
+       x = "Arm", y = "Age (years)") +
+  theme(legend.position = "none")
+```
+
+**Why this is different:**
+- The boxplot shows the median (middle line), the interquartile range (box),
+  and whiskers (range of typical values)
+- The jittered points show *every individual person* — you can see the actual
+  data, not just summaries
+- You can spot outliers, clusters, and whether the groups overlap
+
+**Which version do you prefer for telling the story of age balance between groups?**
+
+---
+
+## 6. Your turn: iterate more
+
+Pick another variable and make three plots for it. For example:
+- **Total bacteria (qpcr_bacteria) by arm** — raw vs log scale
+- **Days since last sex by arm** — with and without that outlier
+- **IL-8 concentration by time_point** — filtering out "out of range" vs keeping it
+
+Or if you want, keep going on age — try:
+- Changing binwidths in Try 1
+- Adding a vertical line for the mean age with `geom_vline()`
+- Coloring by `birth_control` instead of `arm`

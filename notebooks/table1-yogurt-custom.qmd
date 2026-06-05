@@ -1,0 +1,64 @@
+---
+title: "Table 1 — Yogurt Study (Manual Overrides)"
+format: html
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+> Creating a Table 1 with `gtsummary`, going **variable by variable** to decide whether the default summary and default test are appropriate, and overriding where they aren't.
+
+## Variables & decisions
+
+| Variable | Type | Default | Decision |
+|---|---|---|---|
+| `pid` | ID | — | **Exclude** |
+| `arm` | Group | — | **`by` variable** |
+| `days_since_last_sex` | Count (days) | Median (IQR), Wilcoxon | ✅ Keep — skewed count data |
+| `birth_control` | Nominal | n (%), chi-square | ✅ Keep |
+| `age` | Continuous (roughly normal) | Median (IQR), Wilcoxon | **Override** → mean (SD), t-test |
+| `education` | Ordinal (4 levels) | n (%), chi-square | ✅ Keep — reasonable for Table 1 |
+| `sex` | Constant (all female) | — | **Drop** — no variation |
+
+## Setup
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(gtsummary)
+
+df <- read_csv(
+  here("data/group_a_yogurt/01_participant_metadata_yogurt.csv"),
+  col_types = cols(pid = col_character())
+)
+```
+
+## Build the table with overrides
+
+```{r table}
+df |>
+  select(-pid, -sex) |>                        # drop ID + constant column
+  tbl_summary(
+    by = arm,
+    statistic = list(age ~ "{mean} ({sd})")     # age: mean (SD) instead of median (IQR)
+  ) |>
+  add_p(
+    test = list(age ~ "t.test")                 # age: t-test instead of Wilcoxon
+  ) |>
+  add_overall() |>                              # add an "Overall" column
+  bold_labels()                                 # bold variable names
+```
+
+## Quick check
+
+```{r quick-check}
+# Verify mean & SD for age in each arm
+df |>
+  group_by(arm) |>
+  summarise(
+    mean_age = mean(age),
+    sd_age   = sd(age),
+    n        = n()
+  )
+```

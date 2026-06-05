@@ -101,3 +101,139 @@ pid_32,after_antibiotic,unchanged_diet,UNCH099
 pid_16,baseline,unchanged_diet,UNCH100
 pid_44,baseline,unchanged_diet,UNCH101
 pid_50,baseline,yogurt,YOG102
+#Answer
+One row = one patient/individual
+•Column pid: Participant ID (links to participant metadata)
+•Column two (time_point): When baseline or after_antibiotic
+•Column three (arm): treatment or placebo
+•Column four (nugent_score): Vaginal health score (0–10). Lower = healthier. Scores 7+ suggest bacterial vaginosis.
+crp_blood (C-reactive protein in blood) a marker of inflammation
+ph (Vaginal pH)     
+┌───────────────────────────────────────────────────┬────────────────────────────────────────────────┐ 
+ │ Column                                            │ What it means                                  │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Barcode                                           │ Sequencing barcode (identifies which sample in │ 
+ │                                                   │ the machine)                                   │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ libraryName                                       │ Short library code                             │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Block                                             │ Field plot block number (part of experimental  │ 
+ │                                                   │ design)                                        │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Week                                              │ Week of the experiment                         │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Replicate                                         │ Which biological replicate (1–3)               │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Genotype                                          │ Sorghum variety — RT430 or BT642               │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Condition                                         │ Preflowering or Postflowering                  │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Sample.type                                       │ Tissue type                                    │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Day                                               │ Day of sampling (e.g. Day21)                   │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Row                                               │ Field row location                             │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ isFloweringWeek                                   │ TRUE / FALSE — was this the week the plants    │ 
+ │                                                   │ flowered?                                      │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Date.Harvested, Collection.Time                   │ When it was collected                          │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ No.plants.pooled                                  │ How many plants were combined into this sample │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ FloweringJulianDate, FloweringDate,               │ When the plants flowered                       │ 
+ │ FloweringWeek, FloweringDay                       │                                                │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Unreplicated                                      │ TRUE / FALSE                                   │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ CompleteSampleTreatment                           │ Combined label: genotype + week + condition    │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Timepoint                                         │ Numeric timepoint (2–14)                       │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Group                                             │ Combined label: genotype + condition (e.g.     │ 
+ │                                                   │ RT430:Preflowering)                            │ 
+ └───────────────────────────────────────────────────┴────────────────────────────────────────────────┘
+
+│ Column    │ What it means                                                                          │ 
+ ├───────────┼────────────────────────────────────────────────────────────────────────────────────────┤ 
+ │ sample_id │ Which sample                                                                           │ 
+ ├───────────┼────────────────────────────────────────────────────────────────────────────────────────┤ 
+ │ cytokine  │ Immune protein name (IFN-Y, IL-10, IL-1a, IL-1b, IL-6, IL-8, IP-10, MIG, MIP-3a, TNFa) │ 
+ ├───────────┼────────────────────────────────────────────────────────────────────────────────────────┤ 
+ │ conc      │ Concentration                                                                          │ 
+ ├───────────┼────────────────────────────────────────────────────────────────────────────────────────┤ 
+ │ limits    │ within limits or out of range                                                          │ 
+ └───────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+ 04_flow_cytometry_UKZN_workshop_2023.csv                                                           
+                                                                                                        
+ One row = one sample's immune cell counts (same columns as Group B's flow cytometry).                  
+                                                                                                        
+ ┌────────────────────────────────────────┬──────────────────────────────────────────────────┐          
+ │ Column                                 │ What it means                                    │          
+ ├────────────────────────────────────────┼──────────────────────────────────────────────────┤          
+ │ Same 9 columns as Group B's flow table │ Identical lab protocol, same cell types measured │          
+ └────────────────────────────────────────┴──────────────────────────────────────────────────┘          
+                                                                                                        
+ ────────────────────────────────────────────────────────────────────────────────                       
+                                                                                                        
+ 🌾 Modeling Data — Sorghum Timecourse                                                                  
+                                                                                                        
+ ### 01-sorghum_timecourse.csv                                                                          
+                                                                                                        
+ One row = a batch of sorghum leaves from one field plot, at one time point, with gene expression       
+ counts.                                                                                                
+                                                                                                        
+ This table is in wide format — each row has 31 columns total:                                          
+                                                                                                        
+ Gene expression columns (first 9): Each column is a sorghum gene (e.g. Sobic.001G062300.v3.1) and the  
+ number is how many RNA copies were detected from that gene. Higher = more active gene.                 
+                                                                                                        
+ Metadata columns (last 22):                                                                            
+                                                                                                        
+ ┌───────────────────────────────────────────────────┬────────────────────────────────────────────────┐ 
+ │ Column                                            │ What it means                                  │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Barcode                                           │ Sequencing barcode (identifies which sample in │ 
+ │                                                   │ the machine)                                   │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ libraryName                                       │ Short library code                             │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Block                                             │ Field plot block number (part of experimental  │ 
+ │                                                   │ design)                                        │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Week                                              │ Week of the experiment                         │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Replicate                                         │ Which biological replicate (1–3)               │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Genotype                                          │ Sorghum variety — RT430 or BT642               │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Condition                                         │ Preflowering or Postflowering                  │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Sample.type                                       │ Tissue type                                    │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Day                                               │ Day of sampling (e.g. Day21)                   │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Row                                               │ Field row location                             │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ isFloweringWeek                                   │ TRUE / FALSE — was this the week the plants    │ 
+ │                                                   │ flowered?                                      │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Date.Harvested, Collection.Time                   │ When it was collected                          │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ No.plants.pooled                                  │ How many plants were combined into this sample │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ FloweringJulianDate, FloweringDate,               │ When the plants flowered                       │ 
+ │ FloweringWeek, FloweringDay                       │                                                │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Unreplicated                                      │ TRUE / FALSE                                   │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ CompleteSampleTreatment                           │ Combined label: genotype + week + condition    │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Timepoint                                         │ Numeric timepoint (2–14)                       │ 
+ ├───────────────────────────────────────────────────┼────────────────────────────────────────────────┤ 
+ │ Group                                             │ Combined label: genotype + condition (e.g.     │ 
+ │                                                   │ RT430:Preflowering)                            │ 
+ └───────────────────────────────────────────────────┴────────────────────────────────────────────────┘ 
+ ```{r}
+vis_miss(df)
+ ```

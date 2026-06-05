@@ -1,0 +1,68 @@
+---
+title: "Exercise 1 — Yogurt Study Data"
+format: html
+---
+
+## About this dataset
+
+This file comes from a **yogurt study** that looked at whether eating yogurt
+every day changes the vaginal microbiome.
+
+Participants were randomly assigned to one of two groups:
+
+- **yogurt** — ate yogurt daily
+- **unchanged_diet** — stuck with their usual diet
+
+Samples were taken at two time points: **baseline** (before the study started)
+and **after_antibiotic** (after a course of antibiotics).
+
+### The file: `00_sample_ids_yogurt.csv`
+
+Each row is one biological sample. It has 4 columns:
+
+| Column       | Meaning                                                        |
+|--------------|----------------------------------------------------------------|
+| `pid`        | Participant ID (links to other data files about this person)   |
+| `time_point` | When the sample was taken — `baseline` or `after_antibiotic`   |
+| `arm`        | Which group — `yogurt` or `unchanged_diet`                     |
+| `sample_id`  | Unique ID for this sample (links to lab results)               |
+
+Let's load it and take a look:
+
+```{r}
+library(readr)
+df <- read_csv("/workspaces/Data_science_workshop/data/group_a_yogurt/00_sample_ids_yogurt.csv")
+df
+```
+
+```{r}
+# How many rows (samples) and columns?
+rows <- nrow(df)
+cols <- ncol(df)
+```
+
+The dataset has **`r rows`** samples and **`r cols`** columns:
+```{r}# Load and join
+library(tidyverse)
+library(here)
+sample_ids <- read_csv(here("data/group_a_yogurt/00_sample_ids_yogurt.csv"))
+metadata <- read_csv(here("data/group_a_yogurt/01_participant_metadata_yogurt.csv"))
+qpcr <- read_csv(here("data/group_a_yogurt/02_qpcr_results_yogurt.csv"))
+luminex <- read_csv(here("data/group_a_yogurt/03_luminex_results_yogurt.csv"))
+# Distributions and skews
+#Histograms
+ggplot(metadata, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  labs(title = "Histogram of Age", x = "Age", y = "Frequency")
+
+#Count NAs in each column
+colSums(is.na(metadata))
+#Look at the ranges with min() and max()
+min(qpcr$qpcr_bacteria)
+max(qpcr$qpcr_bacteria)
+```
+```{r}
+library(gtsummary)
+tbl_summary(by = group) 
+```
+

@@ -1,0 +1,101 @@
+---
+title: "ggpubr Figures — Yogurt Study"
+format: html
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+> Visualizing the L. iners comparison across study arms and time points with `ggpubr`.
+
+## Setup
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(ggpubr)
+
+samples <- read_csv(
+  here("data/group_a_yogurt/00_sample_ids_yogurt.csv"),
+  col_types = cols(pid = col_character())
+)
+qpcr <- read_csv(
+  here("data/group_a_yogurt/02_qpcr_results_yogurt.csv"),
+  col_types = cols(sample_id = col_character())
+)
+
+df <- samples |>
+  select(sample_id, pid, arm, time_point) |>
+  inner_join(qpcr, by = "sample_id") |>
+  mutate(
+    log_iners  = log(qpcr_iners + 1),
+    time_point = fct_relevel(time_point, "baseline")
+  )
+```
+
+## Figure 1 — Boxplots by arm, faceted by time point
+
+```{r fig1}
+cols <- c("unchanged_diet" = "#0073C2", "yogurt" = "#EFC000")
+
+ggplot(df, aes(x = arm, y = log_iners, color = arm)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 2) +
+  facet_wrap(~ time_point) +
+  stat_compare_means(
+    comparisons = list(c("unchanged_diet", "yogurt")),
+    vjust = 0.4
+  ) +
+  scale_color_manual(values = cols) +
+  theme_pubr() +
+  labs(
+    title = "L. iners by study arm",
+    subtitle = "Faceted by time point",
+    x = "Arm",
+    y = "log(L. iners + 1)"
+  )
+```
+
+## Figure 2 — Paired before-after lines by participant
+
+```{r fig2}
+ggplot(df, aes(x = time_point, y = log_iners, group = pid, color = arm)) +
+  geom_line(alpha = 0.2, linewidth = 0.4) +
+  geom_boxplot(aes(fill = arm), alpha = 0.15, outlier.shape = NA,
+               color = "grey30") +
+  geom_jitter(width = 0.08, alpha = 0.6, size = 2) +
+  stat_compare_means(
+    aes(group = time_point),
+    label = "p.format",
+    method = "wilcox.test",
+    paired = TRUE,
+    comparisons = list(c("baseline", "after_antibiotic")),
+    tip.length = 0
+  ) +
+  facet_wrap(~ arm) +
+  scale_color_manual(values = cols) +
+  scale_fill_manual(values = cols) +
+  theme_pubr() +
+  labs(
+    title = "L. iners: baseline → after antibiotic",
+    subtitle = "Each line = one participant; paired Wilcoxon p-value",
+    x = "Time point",
+    y = "log(L. iners + 1)"
+  ) +
+  theme(legend.position = "none")
+```
+
+## Summary stats
+
+```{r summary}
+df |>
+  group_by(arm, time_point) |>
+  summarise(
+    n = n(),
+    median_log = round(median(log_iners), 2),
+    q25 = round(quantile(log_iners, 0.25), 2),
+    q75 = round(quantile(log_iners, 0.75), 2),
+    .groups = "drop"
+  )
+```

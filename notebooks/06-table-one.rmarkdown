@@ -115,3 +115,4 @@ table_01 |>
   bold_labels() |>
   modify_header(label ~ "**Characteristic**")
 ```
+

@@ -1,0 +1,386 @@
+---
+title: "Data Dictionary — Group 1"
+subtitle: "Exploring all datasets in the workshop workspace"
+format:
+  html:
+    toc: true
+    code-fold: true
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+This document describes every CSV file in the `data/` folder — what a single
+row represents and what each column means.
+
+---
+
+## Group A — Yogurt Study
+
+These files come from a study that looked at whether eating yogurt changes the
+vaginal microbiome. Participants were randomly assigned to either eat yogurt
+every day or stick with their usual diet. Samples were taken at two time
+points: **baseline** and **after a course of antibiotics**.
+
+### 00_sample_ids_yogurt.csv
+
+**Each row represents:** one biological sample collected from a participant at
+one time point.
+
+```{r}
+sample_ids_yog <- read_csv("../data/group_a_yogurt/00_sample_ids_yogurt.csv")
+glimpse(sample_ids_yog)
+```
+
+| Column      | Meaning                                                                 |
+|-------------|-------------------------------------------------------------------------|
+| `pid`       | Participant ID (links to participant metadata)                          |
+| `time_point`| When the sample was taken — `baseline` or `after_antibiotic`            |
+| `arm`       | Which group the participant was in — `yogurt` or `unchanged_diet`       |
+| `sample_id` | Unique ID for this sample (links to qPCR and Luminex results)           |
+
+---
+
+### 01_participant_metadata_yogurt.csv
+
+**Each row represents:** one participant in the yogurt study.
+
+```{r}
+meta_yog <- read_csv("../data/group_a_yogurt/01_participant_metadata_yogurt.csv")
+glimpse(meta_yog)
+```
+
+| Column              | Meaning                                                            |
+|---------------------|--------------------------------------------------------------------|
+| `pid`               | Participant ID                                                     |
+| `arm`               | Study arm — `yogurt` or `unchanged_diet`                           |
+| `days_since_last_sex` | Number of days since the participant last had sex                 |
+| `birth_control`     | Type of birth control used — `no hormonal birth control` or `Depoprovera` |
+| `age`               | Age in years                                                       |
+| `education`         | Highest education level completed                                  |
+| `sex`               | Sex assigned at birth — all participants are `female`              |
+
+---
+
+### 02_qpcr_results_yogurt.csv
+
+**Each row represents:** a single sample's qPCR results showing how much of
+three bacterial targets were detected.
+
+```{r}
+qpcr_yog <- read_csv("../data/group_a_yogurt/02_qpcr_results_yogurt.csv")
+glimpse(qpcr_yog)
+```
+
+| Column            | Meaning                                                           |
+|-------------------|-------------------------------------------------------------------|
+| `sample_id`       | Unique sample ID (links to sample_ids table)                      |
+| `qpcr_bacteria`   | Total bacterial load (copies / mL) measured by universal 16S qPCR |
+| `qpcr_crispatus`  | Abundance of *Lactobacillus crispatus* (copies / mL)              |
+| `qpcr_iners`      | Abundance of *Lactobacillus iners* (copies / mL)                  |
+
+> Both *L. crispatus* and *L. iners* are species of lactobacilli that are
+> common in a healthy vaginal microbiome. A high *crispatus* / low *iners*
+> balance is generally considered healthier.
+
+---
+
+### 03_luminex_results_yogurt.csv
+
+**Each row represents:** one cytokine measurement from one sample.
+
+```{r}
+luminex_yog <- read_csv("../data/group_a_yogurt/03_luminex_results_yogurt.csv")
+glimpse(luminex_yog)
+```
+
+| Column      | Meaning                                                             |
+|-------------|---------------------------------------------------------------------|
+| `sample_id` | Unique sample ID (links to sample_ids table)                        |
+| `cytokine`  | Name of the immune signalling protein measured (e.g. IL-1a, TNFa)   |
+| `conc`      | Concentration of that cytokine in the sample                        |
+| `limits`    | Whether the value was `within limits` or `out of range` (too low/high) |
+
+The cytokines measured are: IFN-Y, IL-10, IL-1a, IL-1b, IL-6, IL-8, IP-10,
+MIG, MIP-3a, and TNFa. These are **immune signalling molecules** (cytokines
+and chemokines) that help regulate inflammation and immune responses.
+
+---
+
+## Group B — Menstruation Study
+
+This study looked at how the vaginal microbiome and immune system change
+across the menstrual cycle. Samples were taken at four time points linked to
+the menstrual period.
+
+### 00_sample_ids_period.csv
+
+**Each row represents:** one biological sample collected from a participant at
+one time point in their menstrual cycle.
+
+```{r}
+sample_ids_per <- read_csv("../data/group_b_menstruation/00_sample_ids_period.csv")
+glimpse(sample_ids_per)
+```
+
+| Column      | Meaning                                                              |
+|-------------|----------------------------------------------------------------------|
+| `pid`       | Participant ID (links to participant metadata)                       |
+| `time_point`| When in the cycle — `onset`, `end_bleeding`, `week_post`, `week_prior` |
+| `arm`       | Study arm — `birth_control` or `no_birth_control`                    |
+| `sample_id` | Unique sample ID (links to Luminex and flow cytometry results)       |
+
+---
+
+### 01_participant_metadata_period.csv
+
+**Each row represents:** one participant in the menstruation study.
+
+```{r}
+meta_per <- read_csv("../data/group_b_menstruation/01_participant_metadata_period.csv")
+glimpse(meta_per)
+```
+
+| Column           | Meaning                                                        |
+|------------------|----------------------------------------------------------------|
+| `pid`            | Participant ID                                                 |
+| `arm`            | Study arm — `birth_control` or `no_birth_control`              |
+| `age`            | Age in years                                                   |
+| `pcos_status`    | Whether the participant has PCOS — `no disease` or `pcos`       |
+| `period_product` | Menstrual product used — `tampon`, `pad`, or `menstrual_cup`   |
+| `sex`            | Sex assigned at birth — all participants are `female`          |
+
+> PCOS = Polycystic Ovary Syndrome, a hormonal condition that can affect
+> menstrual cycles and fertility.
+
+---
+
+### 02_luminex_period.csv
+
+**Each row represents:** one cytokine measurement from one sample in the
+menstruation study.
+
+```{r}
+luminex_per <- read_csv("../data/group_b_menstruation/02_luminex_period.csv")
+glimpse(luminex_per)
+```
+
+| Column      | Meaning                                                                   |
+|-------------|---------------------------------------------------------------------------|
+| `sample_id` | Unique sample ID (links to sample_ids table)                              |
+| `cytokine`  | Name of the immune signalling protein measured                            |
+| `conc`      | Concentration of that cytokine                                            |
+| `limits`    | Whether the value was detected — `not_censored`, `below_detection_limit`, or `above_detect_limit` |
+
+Note: the cytokines here overlap with the yogurt study but don't include
+IL-8 or IL-10 (the periods dataset has fewer cytokines measured).
+
+---
+
+### 03_flow_cytometry_period.csv
+
+**Each row represents:** one sample's immune cell counts measured by flow
+cytometry.
+
+```{r}
+flow_per <- read_csv("../data/group_b_menstruation/03_flow_cytometry_period.csv")
+glimpse(flow_per)
+```
+
+| Column              | Meaning                                                          |
+|---------------------|------------------------------------------------------------------|
+| `sample_id`         | Unique sample ID                                                 |
+| `live_cd19_negative`| Total live cells that are CD19- (not B cells)                    |
+| `cd45_negative`     | Cells that don't express CD45 (not white blood cells)            |
+| `cd45_positive`     | Cells that express CD45 (white blood cells / leukocytes)         |
+| `neutrophils`       | Neutrophil count (a type of innate immune cell)                  |
+| `non_neutrophils`   | White blood cells that are not neutrophils                       |
+| `cd3_negative`      | Cells that are CD3- (not T cells)                                |
+| `cd3_positive`      | Cells that are CD3+ (T cells)                                    |
+| `cd4_t_cells`       | CD4+ T cell count ("helper" T cells)                             |
+| `cd8_t_cells`       | CD8+ T cell count ("killer" / cytotoxic T cells)                |
+
+> Flow cytometry uses lasers to count and sort cells by the proteins on their
+> surface (CD markers). Each CD protein marks a different type of immune cell.
+
+---
+
+## Instructional Dataset — UKZN Workshop 2023
+
+This is the dataset used in the workshop. It comes from a clinical trial
+testing a **treatment** vs a **placebo** for vaginal health. Samples were
+taken at **baseline**, **week 1**, and **week 7**.
+
+### 00_sample_ids_UKZN_workshop_2023.csv
+
+**Each row represents:** one biological sample.
+
+```{r}
+sample_ids_ukzn <- read_csv("../data/instructional_dataset/00_sample_ids_UKZN_workshop_2023.csv")
+glimpse(sample_ids_ukzn)
+```
+
+| Column      | Meaning                                                   |
+|-------------|-----------------------------------------------------------|
+| `pid`       | Participant ID                                            |
+| `time_point`| When — `baseline`, `week_1`, or `week_7`                  |
+| `arm`       | Study arm — `treatment` or `placebo`                      |
+| `sample_id` | Unique sample ID                                          |
+
+---
+
+### 01_participant_metadata_UKZN_workshop_2023.csv
+
+**Each row represents:** one participant.
+
+```{r}
+meta_ukzn <- read_csv("../data/instructional_dataset/01_participant_metadata_UKZN_workshop_2023.csv")
+glimpse(meta_ukzn)
+```
+
+| Column      | Meaning                                              |
+|-------------|------------------------------------------------------|
+| `pid`       | Participant ID                                       |
+| `arm`       | Study arm — `treatment` or `placebo`                 |
+| `smoker`    | Smoking status — `smoker` or `non-smoker`            |
+| `age`       | Age in years                                         |
+| `education` | Highest education level completed                    |
+| `sex`       | Sex — all participants are `F` (female)              |
+
+---
+
+### 02_visit_clinical_measurements_UKZN_workshop_2023.csv
+
+**Each row represents:** a set of clinical measurements taken at one visit for
+one participant.
+
+```{r}
+clinical_ukzn <- read_csv("../data/instructional_dataset/02_visit_clinical_measurements_UKZN_workshop_2023.csv")
+glimpse(clinical_ukzn)
+```
+
+| Column        | Meaning                                                                 |
+|---------------|-------------------------------------------------------------------------|
+| `pid`         | Participant ID                                                          |
+| `time_point`  | When — `baseline`, `week_1`, or `week_7`                                |
+| `arm`         | Study arm — `treatment` or `placebo`                                    |
+| `nugent_score`| Nugent score (0–10), a measure of vaginal microbiome health (lower = healthier) |
+| `crp_blood`   | C-reactive protein level in blood (a marker of inflammation)            |
+| `ph`          | Vaginal pH                                                              |
+
+> The **Nugent score** is a standard clinical score for bacterial vaginosis.
+> Scores of 0–3 are considered normal, 4–6 intermediate, and 7–10 indicate
+> bacterial vaginosis.
+
+---
+
+### 03_elisa_cytokines_UKZN_workshop_2023.csv
+
+**Each row represents:** one cytokine measurement from one sample.
+
+```{r}
+elisa_ukzn <- read_csv("../data/instructional_dataset/03_elisa_cytokines_UKZN_workshop_2023.csv")
+glimpse(elisa_ukzn)
+```
+
+| Column      | Meaning                                                        |
+|-------------|----------------------------------------------------------------|
+| `sample_id` | Unique sample ID                                               |
+| `cytokine`  | Name of the immune signalling protein measured                 |
+| `conc`      | Concentration of that cytokine                                 |
+| `limits`    | Whether the value was `within limits` or `out of range`        |
+
+The cytokines here are the same 10 as in the yogurt Luminex panel: IFN-Y,
+IL-10, IL-1a, IL-1b, IL-6, IL-8, IP-10, MIG, MIP-3a, and TNFa.
+
+> ELISA (Enzyme-Linked Immunosorbent Assay) is a lab technique that measures
+> the concentration of a specific protein in a sample. Luminex is a newer
+> technology that can measure many proteins at once — both give similar types
+> of data.
+
+---
+
+### 04_flow_cytometry_UKZN_workshop_2023.csv
+
+**Each row represents:** one sample's immune cell counts measured by flow
+cytometry.
+
+```{r}
+flow_ukzn <- read_csv("../data/instructional_dataset/04_flow_cytometry_UKZN_workshop_2023.csv")
+glimpse(flow_ukzn)
+```
+
+| Column              | Meaning                                                           |
+|---------------------|-------------------------------------------------------------------|
+| `sample_id`         | Unique sample ID                                                  |
+| `live_cd19_negative`| Total live cells that are CD19- (not B cells)                     |
+| `cd45_negative`     | Cells that don't express CD45 (not white blood cells)             |
+| `cd45_positive`     | Cells that express CD45 (white blood cells / leukocytes)          |
+| `neutrophils`       | Neutrophil count                                                  |
+| `non_neutrophils`   | White blood cells that are not neutrophils                        |
+| `cd3_negative`      | Cells that are CD3- (not T cells)                                 |
+| `cd3_positive`      | Cells that are CD3+ (T cells)                                     |
+| `cd4_t_cells`       | CD4+ T helper cells                                               |
+| `cd8_t_cells`       | CD8+ cytotoxic T cells                                            |
+
+> The columns are identical to the flow cytometry data in Group B — same lab
+> protocol was used across studies.
+
+---
+
+## Modeling Data — Sorghum Timecourse
+
+### 01-sorghum_timecourse.csv
+
+**Each row represents:** one sample (a batch of leaves from one plot) at one
+time point, with gene expression counts for 9 genes of interest.
+
+Note: this file is in **wide format** — the first 9 columns are gene expression
+counts (with gene IDs as column names), followed by 22 columns of experimental
+metadata. This is different from the other datasets which are in **long
+format** (one measurement per row).
+
+```{r}
+sorghum <- read_csv("../data/modeling/01-sorghum_timecourse.csv")
+glimpse(sorghum)
+```
+
+**Gene expression columns** (first 9 columns, counts from RNA sequencing):
+
+| Column                                    | Meaning                                                |
+|-------------------------------------------|--------------------------------------------------------|
+| `Sobic.001G062300.v3.1` through `...`     | Expression count for each of 9 sorghum genes           |
+
+**Experimental metadata columns:**
+
+| Column                     | Meaning                                                          |
+|----------------------------|------------------------------------------------------------------|
+| `Barcode`                  | Sequencing barcode used to identify this sample                  |
+| `libraryName`              | Sequencing library name (short code for the sample)              |
+| `Block`                    | Field plot block number (experimental design)                    |
+| `Week`                     | Week number of the experiment                                    |
+| `Replicate`                | Biological replicate number (1–3)                                |
+| `Genotype`                 | Sorghum variety — `RT430` or `BT642`                             |
+| `Condition`                | Treatment — `Preflowering` or `Postflowering`                    |
+| `Sample.type`              | Tissue type — `Leaves`, `Control`, `Preflowering`, or `Postflowering` |
+| `Day`                      | Day of sampling (e.g. `Day21`)                                   |
+| `Row`                      | Field row location                                               |
+| `isFloweringWeek`          | Whether this was the flowering week (`TRUE` / `FALSE`)           |
+| `Date.Harvested`           | Date the sample was harvested                                    |
+| `Collection.Time`          | Time of day the sample was collected                             |
+| `No.plants.pooled`         | How many individual plants were pooled into this sample          |
+| `FloweringJulianDate`      | Julian date when the plants flowered                             |
+| `FloweringDate`            | Calendar date when the plants flowered                           |
+| `FloweringWeek`            | Week number of flowering                                         |
+| `FloweringDay`             | Day number of flowering                                          |
+| `Unreplicated`             | Whether this sample is unreplicated (`TRUE` / `FALSE`)           |
+| `CompleteSampleTreatment`  | Combined treatment label (genotype + week + condition)           |
+| `Timepoint`                | Numeric time point (2–14, aligns with Week)                      |
+| `Group`                    | Combined group label (genotype + condition, e.g. `RT430:Preflowering`) |
+
+> This dataset tracks **gene expression** over time in two sorghum varieties,
+> looking at how gene activity changes before and after flowering. The 9 genes
+> were selected because they're known to be involved in plant development or
+> stress responses.

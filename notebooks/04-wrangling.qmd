@@ -19,16 +19,21 @@ table_02 <- read_csv(here("data/instructional_dataset/02_visit_clinical_measurem
 
 ## Part 1 — Predict (no code)
 
-For each pipeline below, write in plain words *how many rows* the result has and *what one row represents*. Don't run any code yet.
+For each pipeline below, write in plain words *how many rows* the result has and *what one row represents*. Don't run any code yet. The result has 132rows
 
 ```{r}
 table_02
+table_02_summarized <- table_02 |> group_by(pid) |> summarise(mean_ph = mean(ph)) 
+print(table_02_summarized)
+
+
 ```
 
 **1. After `table_02 |> group_by(pid) |> summarise(mean_ph = mean(ph))`:**
+table_02 |> group_by(pid) |> summarise(mean_ph = mean(ph))
 
-*Your answer:*
 
+*Your answer:* Each pid was summarized as a group, so the result has 44 rows (one per pid). Each row represents a person, with their mean pH across all time points and arms.
 **2. After `table_02 |> group_by(arm, time_point) |> summarise(mean_ph = mean(ph))`:**
 
 *Your answer:*
@@ -45,13 +50,16 @@ table_02
 
 ```{r}
 # step 1: pipe table_02 into head() to see the starting shape
+table_02 |> head()
+
 ```
 
 ```{r}
 # step 2: group_by(pid) |> summarise(mean_ph = mean(ph), mean_nugent = mean(nugent_score))
 # assign it to per_person so step 3 can use it
-per_person <- NULL  # replace NULL with the pipeline
+per_person <-  # replace NULL with the pipeline
 per_person
+group_by(pid) |> summarise(mean_ph = mean(ph), mean_nugent = mean(nugent_score))
 ```
 
 ```{r}
